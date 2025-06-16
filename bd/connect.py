@@ -1,7 +1,7 @@
 import random
 import sqlite3
 import csv
-import faker# Insere dados correlacionando email com nome e criando senha
+import faker
 import unidecode
 
 fake = faker.Faker('pt_BR')
