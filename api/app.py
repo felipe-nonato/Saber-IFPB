@@ -1,90 +1,140 @@
-import sys
-import json
-from pathlib import Path
-import sqlite3
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import datetime
+import threading
+import os
 
-# Adiciona o diretório scripts ao sys.path (um nível acima do app.py)
-scripts_dir = Path(__file__).parent.parent / "scripts"
-sys.path.append(str(scripts_dir))
+# Import configurations
+from .config import Configuration
 
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-from getRecommendations import main as get_recommendations
+# Import database setup
+from .database import db
 
-app = Flask(__name__)
-CORS(app)  # Permite qualquer origem
+# Import models (required for db.create_all() to find them)
+from .models.user import User
+from .models.book import Book
+from .models.rental import Rental
+from .models.category import Category
+from .models.penalty import Penalty
+from .models.transaction import Transaction
 
-DB_PATH = str(Path(__file__).parent.parent / "bd" / "saber.db")
+# Import patterns
+from .patterns.builder import LivroBuilder
+from .patterns.factory import (
+    NotificationFactory,
+    EmailFactory,
+    SMSFactory,
+    EmailNotification,
+    SMSNotification,
+)
+from .patterns.mediator import BibliotecaMediator
+from .patterns.observer import (
+    Subject,
+    UsuarioObserver,
+    CoinReceivedObserver,
+    RentalDueObserver,
+)
+from .patterns.pricing_strategy import PrecificacaoStrategy, PorRecorrencia, PorTempo
+from .patterns.singleton import SistemaEconomia
+from .patterns.state import EstadoLivro, Disponivel, Alugado, Reservado
+
+# Import services
+from .services.saber_facade import SaberFacade
 
 
-def authenticate_user(email, senha):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id FROM usuarios WHERE email = ? AND senha = ?", (email, senha)
+def create_app():
+    app = Flask(__name__)
+    # Instancie o Singleton corretamente
+    config = Configuration.get_instance()  # Ou: config = Configuration()
+
+    # Carregue as configurações do objeto instanciado
+    app.config.from_object(config)
+
+    # Depuração: Verifique se as configs foram carregadas
+    print("Configurações carregadas:")
+    print(f"SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
+    print(f"SECRET_KEY: {app.config.get('SECRET_KEY')}")
+
+    db.init_app(app)
+
+    # Initialize global instances of singletons and factories
+    config = (
+        Configuration()
+    )  # Configuration is already a singleton via its class definition
+    sistema_economia = SistemaEconomia.get_instance()  # Singleton for economy
+
+    # Notification Setup
+    notification_subject = Subject()
+    email_factory = EmailFactory()
+    sms_factory = SMSFactory()
+
+    # Instantiate and attach observers
+    notification_subject.attach(
+        CoinReceivedObserver(email_factory)
+    )  # Pass email_factory
+    notification_subject.attach(RentalDueObserver(email_factory))  # Pass email_factory
+
+    # Pricing Strategies
+    # For this example, we'll use PorTempo as the default pricing strategy for the system.
+    # In a real application, the choice of strategy might be dynamic.
+    default_pricing_strategy: PrecificacaoStrategy = PorTempo(config)
+
+    # Mediator and Facade
+    mediator = BibliotecaMediator(
+        db, default_pricing_strategy, sistema_economia, notification_subject
     )
+    facade = SaberFacade(db, mediator, LivroBuilder())  # Pass LivroBuilder to Facade
 
-    user = cursor.fetchone()
-    conn.close()
-    if user:
-        return user[0]  # Retorna o ID do usuário
-    return None  # Retorna None se as credenciais forem inválidas
+    # Attach instances to app for access in blueprints (e.g., current_app.facade)
+    app.facade = facade
+    app.db = db
+    app.sistema_economia = sistema_economia
 
+    # Register blueprints (API routes)
+    from .routes.user_routes import user_bp
+    from .routes.book_routes import book_bp
 
-def get_livros_lidos(user_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT B.isbn13, B.title, B.thumbnail, NL.nota
-        FROM NotasLivros NL
-        JOIN Biblioteca B ON NL.isbn13 = B.isbn13
-        WHERE NL.usuario_id = ?
-    """,
-        (user_id,),
-    )
-    livros = [
-        {"isbn13": row[0], "titulo": row[1], "thumbnail": row[2], "avaliacao": row[3]}
-        for row in cursor.fetchall()
-    ]
-    conn.close()
-    return livros
+    app.register_blueprint(user_bp, url_prefix="/api")
+    app.register_blueprint(book_bp, url_prefix="/api")
+
+    @app.route("/")
+    def index():
+        return "Bem-vindo à Saber API!"
+
+    return app
 
 
-@app.route("/recommendations", methods=["GET"])
-def get_recommendations_route():
-    try:
-        user_id = request.args.get("id", default=1, type=int)
-        num_recommendations = request.args.get("num", default=5, type=int)
-        result = get_recommendations(user_id, num_recommendations)
-        return json.loads(result), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 200
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    email = data.get("email")
-    senha = data.get("senha")
-    usuarioId = authenticate_user(email, senha)
-
-    if not email or not senha:
-        return jsonify({"error": "Email e senha são obrigatórios"}), 400
-    if usuarioId is not None:
-        return jsonify({"success": True, "usuario": usuarioId}), 200
-    else:
-        return jsonify({"success": False, "error": "Credenciais inválidas"}), 401
-
-
-@app.route("/livros-lidos", methods=["GET"])
-def livros_lidos():
-    user_id = request.args.get("id", type=int)
-    if not user_id:
-        return jsonify({"error": "ID do usuário é obrigatório"}), 400
-    livros = get_livros_lidos(user_id)
-    return jsonify({"livros_lidos": livros}), 200
-
-
+# --- Run Flask App ---
+# This block ensures the app runs when `python -m saber.app` is executed
 if __name__ == "__main__":
-    app.run(debug=True)
+    app = create_app()
+
+    def run_flask():
+        with app.app_context():
+            db.create_all()  # Create tables based on models
+            # Optional: Add initial data or system user for economy
+            if not User.query.filter_by(nome="system").first():
+                system_user = User(
+                    matricula="SYS001", nome="system", saldoMoedas=999999999
+                )
+                db.session.add(system_user)
+                db.session.commit()
+                print("Usuário do sistema criado para transações de economia.")
+        app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+
+    # Run the Flask app in a separate thread to not block the Colab notebook
+    thread = threading.Thread(target=run_flask)
+    thread.start()
+
+    print("Aplicação Flask está rodando. Acesse em http://127.0.0.1:5000/")
+
+    # Optional: For Colab/external access via ngrok
+    # try:
+    #     from pyngrok import ngrok
+    #     ngrok.kill() # Terminate any previous ngrok tunnels
+    #     public_url = ngrok.connect(5000)
+    #     print(f"Ngrok Tunnel URL: {public_url}")
+    # except ImportError:
+    #     print("Ngrok não está instalado. Instale com `!pip install pyngrok` para acesso externo.")
+    # except Exception as e:
+    #     print(f"Erro ao configurar ngrok: {e}")
