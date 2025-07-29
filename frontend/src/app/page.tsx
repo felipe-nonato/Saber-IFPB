@@ -1,103 +1,77 @@
+import Logo from "@/components/logo/logo";
 import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    return (
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#c3cfe2] p-6">
+            <header className="flex flex-col items-center gap-2 mb-8">
+                <Logo />
+            </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <main className="flex flex-col gap-8 items-center w-full max-w-2xl">
+                <section className="bg-white rounded-xl shadow p-6 w-full">
+                    <h2 className="text-2xl font-semibold mb-2 text-[#2d3748]">
+                        Sobre o Projeto
+                    </h2>
+                    <p className="text-[#4a5568]">
+                        O <b>Saber-IFPB</b> é uma API desenvolvida em Flask para
+                        facilitar o empréstimo, reserva e gestão de livros entre
+                        estudantes. O sistema utiliza padrões de projeto,
+                        autenticação, notificações e integração com moedas
+                        virtuais para incentivar a colaboração.
+                    </p>
+                </section>
+
+                <section className="bg-white rounded-xl shadow p-6 w-full">
+                    <h2 className="text-xl font-semibold mb-2 text-[#2d3748]">
+                        Funcionalidades
+                    </h2>
+                    <ul className="list-disc pl-5 text-[#4a5568] space-y-1">
+                        <li>Cadastro e autenticação de usuários</li>
+                        <li>Depósito, empréstimo e reserva de livros</li>
+                        <li>Notificações por e-mail e SMS</li>
+                        <li>Gestão de categorias e penalidades</li>
+                        <li>Transações com moedas virtuais</li>
+                        <li>API RESTful documentada</li>
+                    </ul>
+                </section>
+
+                <section className="bg-white rounded-xl shadow p-6 w-full">
+                    <h2 className="text-xl font-semibold mb-2 text-[#2d3748]">
+                        Como usar
+                    </h2>
+                    <ol className="list-decimal pl-5 text-[#4a5568] space-y-1">
+                        <li>Faça login ou cadastre-se na plataforma</li>
+                        <li>
+                            Deposite livros para compartilhar com outros alunos
+                        </li>
+                        <li>Pesquise e reserve livros disponíveis</li>
+                        <li>Gerencie suas transações e saldo de moedas</li>
+                    </ol>
+                </section>
+
+                <section className="flex flex-col sm:flex-row gap-4 justify-center w-full">
+                    <a
+                        href="https://github.com/felipe-nonato/Saber-IFPB"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#2b6cb0] text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-[#2c5282] transition"
+                    >
+                        Ver código no GitHub
+                    </a>
+                    <a
+                        href="/api/docs"
+                        className="bg-[#38a169] text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-[#2f855a] transition"
+                    >
+                        Documentação da API
+                    </a>
+                </section>
+            </main>
+
+            <footer className="mt-12 text-[#718096] text-sm text-center">
+                © {new Date().getFullYear()} Saber-IFPB. Projeto acadêmico sem
+                fins lucrativos.
+            </footer>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }

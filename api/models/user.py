@@ -9,6 +9,12 @@ class User(db.Model):
     matricula = db.Column(
         db.String(50), unique=True, nullable=True
     )  # Adicionado 'matricula' – permite nulo, mas único
+    email = db.Column(
+        db.String(120), unique=True, nullable=False
+    )  # Renomeado 'email' para 'email' – obrigatório e único
+    senha = db.Column(
+        db.String(255), nullable=False
+    )  # Renomeado 'password' para 'senha' – obrigatório, tamanho aumentado para segurança
     nome = db.Column(
         db.String(120), unique=True, nullable=False
     )  # Renomeado 'username' para 'nome' – obrigatório e único

@@ -1,0 +1,44 @@
+// filepath: /home/lipe/Codes/Saber-IFPB/frontend/src/app/landing.tsx
+import Image from "next/image";
+import { useEffect, useState } from "react";
+
+export default function LandingPage() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    // Substitua pela URL da sua API
+    fetch('/api/your-endpoint')
+      .then(response => response.json())
+      .then(data => setData(data))
+      .catch(error => console.error('Error fetching data:', error));
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <header className="text-center mb-8">
+        <h1 className="text-4xl font-bold">Bem-vindo ao Nosso Projeto</h1>
+        <p className="mt-4 text-lg">Uma breve descrição do projeto e seus objetivos.</p>
+      </header>
+
+      <main className="flex flex-col items-center">
+        {data ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            {data.map((item) => (
+              <div key={item.id} className="border p-4 rounded-lg shadow-md">
+                <Image src={item.image} alt={item.title} width={300} height={200} />
+                <h2 className="text-xl font-semibold mt-2">{item.title}</h2>
+                <p>{item.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>Carregando...</p>
+        )}
+      </main>
+
+      <footer className="mt-8">
+        <p className="text-sm">© 2023 Seu Nome ou Nome da Empresa. Todos os direitos reservados.</p>
+      </footer>
+    </div>
+  );
+}

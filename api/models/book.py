@@ -20,6 +20,21 @@ class Book(db.Model):
     autor = db.Column(
         db.String(120), nullable=False
     )  # Adicionado 'autor' conforme builder
+    ISBN = db.Column(
+        db.String(20), unique=True, nullable=True
+    )  # Adicionado 'ISBN' – opcional, único
+    resumo = db.Column(
+        db.Text, nullable=True
+    )  # Adicionado 'resumo' – opcional, texto longo
+    capa = db.Column(
+        db.String(255), nullable=True
+    )  # Adicionado 'capa' – opcional, URL da imagem
+    ano_publicacao = db.Column(
+        db.Integer, nullable=True
+    )  # Adicionado 'ano_publicacao' – opcional, ano do livro
+    paginas = db.Column(
+        db.Integer, nullable=True
+    )  # Adicionado 'paginas' – opcional, número de páginas
     depositor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
     # Campo para armazenar o nome do estado (para persistência no DB)
