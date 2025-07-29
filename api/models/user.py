@@ -36,15 +36,19 @@ class User(db.Model):
     # Campo auxiliar para o UsuarioObserver (não persistente no DB)
     _usuario_observer = None
 
-    def __init__(self, nome, matricula=None, saldoMoedas=0):
+    def __init__(self, nome, email, senha, matricula=None, saldoMoedas=0):
         """
         Construtor da classe User.
 
         :param nome: Nome do usuário (obrigatório, único).
+        :param email: Email do usuário (obrigatório, único).
+        :param senha: Senha do usuário (obrigatório).
         :param matricula: Matrícula do usuário (opcional, única se informada).
         :param saldoMoedas: Saldo inicial de moedas (opcional, default 0).
         """
         self.nome = nome
+        self.email = email
+        self.senha = senha
         self.matricula = matricula
         self.saldoMoedas = saldoMoedas  # Agora aceita valor personalizado no init
 

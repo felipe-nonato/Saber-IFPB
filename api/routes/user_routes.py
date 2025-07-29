@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
+import jwt
+import datetime
 
 # current_app é usado para acessar a instância da aplicação Flask e suas propriedades
 # que foram anexadas na função create_app.
@@ -54,3 +56,30 @@ def get_user_route(user_id):
             }
         )
     return jsonify({"error": "Usuário não encontrado"}), 404
+
+
+@user_bp.route("/login", methods=["POST"])
+def login_route():
+    data = request.json
+    email = data.get("email")
+    senha = data.get("senha")
+    if not email or not senha:
+        return jsonify({"error": "Email e senha são obrigatórios"}), 400
+
+    user = (
+        current_app.db.session.query(current_app.db.Model.metadata.tables["users"])
+        .filter_by(email=email)
+        .first()
+    )
+    # Ou, se você tem o modelo User importado:
+    # user = User.query.filter_by(email=email).first()
+    if not user or user.senha != senha:
+        return jsonify({"error": "Credenciais inválidas"}), 401
+
+    payload = {
+        "user_id": user.id,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12),
+    }
+    token = jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
+
+    return jsonify({"success": True, "token": token, "usuario": user.nome})

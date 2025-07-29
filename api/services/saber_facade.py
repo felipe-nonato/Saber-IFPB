@@ -14,20 +14,33 @@ class SaberFacade:
         self.mediator = mediator
         self.livro_builder = livro_builder  # Instância do builder
 
-    def cadastrarUsuario(self, nome: str, matricula: str = None):
+    def cadastrarUsuario(
+        self, nome: str, email: str, senha: str, matricula: str = None
+    ):
         existing_user = User.query.filter_by(nome=nome).first()
         if existing_user:
             return None, "Usuário com este nome já existe."
+        if User.query.filter_by(email=email).first():
+            return None, "Usuário com este e-mail já existe."
         if matricula and User.query.filter_by(matricula=matricula).first():
             return None, "Usuário com esta matrícula já existe."
 
-        new_user = User(nome=nome, matricula=matricula)
+        new_user = User(nome=nome, email=email, senha=senha, matricula=matricula)
         self.db.session.add(new_user)
         self.db.session.commit()
         return new_user, "Usuário cadastrado com sucesso."
 
     def depositarLivro(
-        self, titulo: str, autor: str, depositor_id: int, categoria_nome: str = None
+        self,
+        titulo: str,
+        autor: str,
+        depositor_id: int,
+        categoria_nome: str = None,
+        ISBN: str = None,
+        resumo: str = None,
+        capa: str = None,
+        ano_publicacao: int = None,
+        paginas: int = None,
     ):
         depositor = User.query.get(depositor_id)
         if not depositor:
@@ -45,12 +58,17 @@ class SaberFacade:
                 self.db.session.add(categoria)
                 self.db.session.flush()  # Garante que a categoria obtenha um ID antes de ser usada
 
-        # Usa o builder
+        # Usa o builder para todos os campos
         book = (
             self.livro_builder.setTitulo(titulo)
             .setAutor(autor)
             .setDepositorId(depositor_id)
             .setCategoria(categoria)
+            .setISBN(ISBN)
+            .setResumo(resumo)
+            .setCapa(capa)
+            .setAnoPublicacao(ano_publicacao)
+            .setPaginas(paginas)
             .build()
         )
 

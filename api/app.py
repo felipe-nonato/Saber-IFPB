@@ -115,7 +115,11 @@ if __name__ == "__main__":
             # Optional: Add initial data or system user for economy
             if not User.query.filter_by(nome="system").first():
                 system_user = User(
-                    matricula="SYS001", nome="system", saldoMoedas=999999999
+                    matricula="SYS001",
+                    nome="system",
+                    email="system@saber.ifpb",
+                    senha="system",  # Ou gere uma senha forte se preferir
+                    saldoMoedas=999999999,
                 )
                 db.session.add(system_user)
                 db.session.commit()
