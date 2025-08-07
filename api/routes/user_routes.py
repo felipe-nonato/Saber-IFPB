@@ -1,10 +1,9 @@
+# api/routes/user_routes.py
+
 from flask import Blueprint, request, jsonify, current_app
 import jwt
 import datetime
-
-# current_app é usado para acessar a instância da aplicação Flask e suas propriedades
-# que foram anexadas na função create_app.
-# Ex: current_app.facade
+from api.models.user import User  # para consulta mais clara
 
 user_bp = Blueprint("user_bp", __name__)
 
@@ -15,7 +14,8 @@ def get_facade():
 
 @user_bp.route("/users", methods=["POST"])
 def create_user_route():
-    data = request.json
+    data = request.json or {}
+
     nome = data.get("nome")
     matricula = data.get("matricula")
     email = data.get("email")
@@ -58,6 +58,7 @@ def create_user_route():
 def get_user_route(user_id):
     facade = get_facade()
     user = facade.obterUsuario(user_id)
+
     if user:
         return jsonify(
             {
@@ -69,14 +70,17 @@ def get_user_route(user_id):
                 "saldoMoedas": user.saldoMoedas,
             }
         )
+
     return jsonify({"error": "Usuário não encontrado"}), 404
 
 
 @user_bp.route("/login", methods=["POST"])
 def login_route():
-    data = request.json
+    data = request.json or {}
+
     email = data.get("email")
     senha = data.get("senha")
+
     if not email or not senha:
         return jsonify({"error": "Email e senha são obrigatórios"}), 400
 
