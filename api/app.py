@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 import datetime
 import threading
 import os
@@ -108,6 +109,7 @@ def create_app():
 # This block ensures the app runs when `python -m saber.app` is executed
 if __name__ == "__main__":
     app = create_app()
+    CORS(app)
 
     def run_flask():
         with app.app_context():

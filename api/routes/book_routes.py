@@ -1,7 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from api.models.rental import (
-    Rental,
-)  # Importa para buscar registros de aluguel para o retorno de API
+from api.models.rental import Rental
 
 book_bp = Blueprint("book_bp", __name__)
 
@@ -16,7 +14,12 @@ def deposit_book_route():
     titulo = data.get("titulo")
     autor = data.get("autor")
     depositor_id = data.get("depositor_id")
-    categoria_nome = data.get("categoria")  # Nome da categoria é opcional
+    categoria_nome = data.get("categoria")
+    ISBN = data.get("ISBN")
+    resumo = data.get("resumo")
+    capa = data.get("capa")
+    ano_publicacao = data.get("ano_publicacao")
+    paginas = data.get("paginas")
 
     if not all([titulo, autor, depositor_id]):
         return (
@@ -43,6 +46,11 @@ def deposit_book_route():
                         "estado": book._estado_nome,
                         "depositor_id": book.depositor_id,
                         "categoria": book.categoria.nome if book.categoria else None,
+                        "ISBN": book.ISBN,
+                        "resumo": book.resumo,
+                        "capa": book.capa,
+                        "ano_publicacao": book.ano_publicacao,
+                        "paginas": book.paginas,
                     },
                 }
             ),
@@ -65,6 +73,11 @@ def list_books_route():
             "estado": book._estado_nome,
             "depositor_id": book.depositor_id,
             "categoria": book.categoria.nome if book.categoria else None,
+            "ISBN": book.ISBN,
+            "resumo": book.resumo,
+            "capa": book.capa,
+            "ano_publicacao": book.ano_publicacao,
+            "paginas": book.paginas,
         }
         for book in books
     ]
@@ -86,7 +99,6 @@ def rent_book_route(book_id):
     facade = get_facade()
     book, message = facade.alugarLivro(book_id, user_id)
     if book:
-        # Busca o último registro de aluguel para o livro para obter as datas
         latest_rental = (
             Rental.query.filter_by(book_id=book.id, rentee_id=user_id)
             .order_by(Rental.dataAluguel.desc())
@@ -108,6 +120,11 @@ def rent_book_route(book_id):
                         "estado": book._estado_nome,
                         "rentee_id": book.rentee_id,
                         "data_devolucao_estimada": return_date_str,
+                        "ISBN": book.ISBN,
+                        "resumo": book.resumo,
+                        "capa": book.capa,
+                        "ano_publicacao": book.ano_publicacao,
+                        "paginas": book.paginas,
                     },
                 }
             ),
@@ -119,6 +136,8 @@ def rent_book_route(book_id):
 
 @book_bp.route("/books/<book_id>/return", methods=["POST"])
 def return_book_route(book_id):
+    from datetime import datetime
+
     data = request.json
     user_id = data.get("user_id")
     if not user_id:
@@ -132,6 +151,17 @@ def return_book_route(book_id):
     facade = get_facade()
     book, message = facade.processarDevolucao(book_id, user_id)
     if book:
+        # Atualiza a data de devolução efetiva para agora
+        rental = (
+            Rental.query.filter_by(book_id=book.id, rentee_id=user_id)
+            .filter(Rental.dataDevolucaoEfetiva == None)
+            .order_by(Rental.dataAluguel.desc())
+            .first()
+        )
+        if rental:
+            rental.dataDevolucaoEfetiva = datetime.now()
+            current_app.db.session.commit()
+
         return (
             jsonify(
                 {
@@ -140,6 +170,11 @@ def return_book_route(book_id):
                         "id": book.id,
                         "titulo": book.titulo,
                         "estado": book._estado_nome,
+                        "ISBN": book.ISBN,
+                        "resumo": book.resumo,
+                        "capa": book.capa,
+                        "ano_publicacao": book.ano_publicacao,
+                        "paginas": book.paginas,
                     },
                 }
             ),
@@ -173,6 +208,11 @@ def reserve_book_route(book_id):
                         "titulo": book.titulo,
                         "estado": book._estado_nome,
                         "reserved_by_id": book.reserved_by_id,
+                        "ISBN": book.ISBN,
+                        "resumo": book.resumo,
+                        "capa": book.capa,
+                        "ano_publicacao": book.ano_publicacao,
+                        "paginas": book.paginas,
                     },
                 }
             ),
