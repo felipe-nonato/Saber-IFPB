@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 import os
 
 # Configurações
 from .config import Configuration
+
 # Para testes, basta importar aqui sua TestingConfig:
 # from .config_test import TestingConfig
 
@@ -63,6 +65,9 @@ def create_app(config_class=None):
 
     # --- Extensões ---
     db.init_app(app)
+
+    # --- CORS ---
+    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 
     # --- Setup de padrões, singleton e observers ---
     # Escolhe a instância de config para usar na estratégia de precificação
